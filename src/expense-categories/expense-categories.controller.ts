@@ -1,5 +1,5 @@
 // src/expense-categories/expense-categories.controller.ts
-import { Controller, Get, Post, Body, Put, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Put, Param, Delete, ParseIntPipe } from '@nestjs/common';
 import { ExpenseCategoriesService } from './expense-categories.service';
 import { CreateExpenseCategoryDto } from './dto/create-expense-category.dto';
 import { UpdateExpenseCategoryDto } from './dto/update-expense-category.dto';
@@ -23,7 +23,7 @@ export class ExpenseCategoriesController {
   // Endpoint para actualizar una categoría por ID
   @Put(':id')
   async update(
-    @Param('id') id: number,
+    @Param('id', ParseIntPipe) id: number,
     @Body() updateExpenseCategoryDto: UpdateExpenseCategoryDto,
   ) {
     return await this.expenseCategoriesService.update(id, updateExpenseCategoryDto);
@@ -31,7 +31,7 @@ export class ExpenseCategoriesController {
 
   // Endpoint para eliminar una categoría por ID
   @Delete(':id')
-  async delete(@Param('id') id: number) {
+  async delete(@Param('id', ParseIntPipe) id: number) {
     return await this.expenseCategoriesService.delete(id);
   }
 }

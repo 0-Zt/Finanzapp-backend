@@ -1,5 +1,5 @@
 // src/transactions/transactions.controller.ts
-import { Controller, Get, Post, Put, Delete, Body, Query, Param } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Query, Param, DefaultValuePipe, ParseIntPipe } from '@nestjs/common';
 import { TransactionsService } from './transactions.service';
 import { CreateTransactionDto } from './dto/create-transaction.dto';
 import { UpdateTransactionDto } from './dto/update-transaction.dto';
@@ -11,9 +11,9 @@ export class TransactionsController {
   // Endpoint para listar transacciones (requiere un parámetro userId en la query)
   @Get()
   async findAll(
-    @Query('userId') userId: number,
-    @Query('limit') limit: number = 6,
-    @Query('offset') offset: number = 0,
+    @Query('userId', ParseIntPipe) userId: number,
+    @Query('limit', new DefaultValuePipe(6), ParseIntPipe) limit: number,
+    @Query('offset', new DefaultValuePipe(0), ParseIntPipe) offset: number,
   ) {
     return await this.transactionsService.findAll(userId, limit, offset);
   }
@@ -27,7 +27,7 @@ export class TransactionsController {
   // Endpoint para actualizar una transacción (por id)
   @Put(':id')
   async update(
-    @Param('id') id: number,
+    @Param('id', ParseIntPipe) id: number,
     @Body() updateTransactionDto: UpdateTransactionDto
   ) {
     return await this.transactionsService.update(id, updateTransactionDto);
@@ -35,7 +35,7 @@ export class TransactionsController {
 
   // Endpoint para eliminar una transacción (por id)
   @Delete(':id')
-  async delete(@Param('id') id: number) {
+  async delete(@Param('id', ParseIntPipe) id: number) {
     return await this.transactionsService.delete(id);
   }
 }

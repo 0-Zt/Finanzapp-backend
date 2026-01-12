@@ -1,5 +1,5 @@
 // src/upcoming-payments/upcoming-payments.controller.ts
-import { Controller, Get, Post, Put, Delete, Body, Param, Query } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, Query, ParseIntPipe } from '@nestjs/common';
 import { UpcomingPaymentsService } from './upcoming-payments.service';
 import { CreateUpcomingPaymentDto } from './dto/create-upcoming-payment.dto';
 import { UpdateUpcomingPaymentDto } from './dto/update-upcoming-payment.dto';
@@ -10,7 +10,7 @@ export class UpcomingPaymentsController {
 
   // Listar pagos próximos para un usuario (usando userId en query)
   @Get()
-  async findAll(@Query('userId') userId: number) {
+  async findAll(@Query('userId', ParseIntPipe) userId: number) {
     return await this.upcomingPaymentsService.findAll(userId);
   }
 
@@ -23,7 +23,7 @@ export class UpcomingPaymentsController {
   // Actualizar un pago próximo (por id)
   @Put(':id')
   async update(
-    @Param('id') id: number,
+    @Param('id', ParseIntPipe) id: number,
     @Body() updateUpcomingPaymentDto: UpdateUpcomingPaymentDto,
   ) {
     return await this.upcomingPaymentsService.update(id, updateUpcomingPaymentDto);
@@ -31,7 +31,7 @@ export class UpcomingPaymentsController {
 
   // Eliminar un pago próximo (por id)
   @Delete(':id')
-  async delete(@Param('id') id: number) {
+  async delete(@Param('id', ParseIntPipe) id: number) {
     return await this.upcomingPaymentsService.delete(id);
   }
 }

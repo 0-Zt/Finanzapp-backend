@@ -6,10 +6,17 @@ import { ExpenseCategoriesModule } from './expense-categories/expense-categories
 import { UpcomingPaymentsModule } from './upcoming-payments/upcoming-payments.module';
 import { FinancialGoalsModule } from './financial-goals/financial-goals.module';
 import { DbPostgresqlService } from './shared/connection/db.postgresql.service';
+import { DashboardModule } from './dashboard/dashboard.module';
 
 @Module({
-  imports: [TransactionsModule, ExpenseCategoriesModule, UpcomingPaymentsModule, FinancialGoalsModule,],
+  imports: [
+    TransactionsModule,
+    ExpenseCategoriesModule,
+    UpcomingPaymentsModule,
+    FinancialGoalsModule,
+    DashboardModule,
+  ],
   controllers: [AppController],
-  providers: [AppService,DbPostgresqlService],
+  providers: [AppService, DbPostgresqlService],
 })
 export class AppModule {}

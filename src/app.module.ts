@@ -5,6 +5,7 @@ import { TransactionsModule } from './transactions/transactions.module';
 import { ExpenseCategoriesModule } from './expense-categories/expense-categories.module';
 import { UpcomingPaymentsModule } from './upcoming-payments/upcoming-payments.module';
 import { FinancialGoalsModule } from './financial-goals/financial-goals.module';
+import { CategoryBudgetsModule } from './category-budgets/category-budgets.module';
 import { DbPostgresqlService } from './shared/connection/db.postgresql.service';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { AuthModule } from './auth/auth.module';
@@ -18,6 +19,7 @@ import { UserProfileModule } from './user-profile/user-profile.module';
     ExpenseCategoriesModule,
     UpcomingPaymentsModule,
     FinancialGoalsModule,
+    CategoryBudgetsModule,
     DashboardModule,
   ],
   controllers: [AppController],

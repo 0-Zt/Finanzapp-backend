@@ -1,10 +1,6 @@
-// src/upcoming-payments/dto/create-upcoming-payment.dto.ts
-import { IsInt, IsDateString, IsString, IsNotEmpty, IsNumber, IsOptional } from 'class-validator';
+import { IsDateString, IsString, IsNotEmpty, IsNumber, IsOptional, IsInt } from 'class-validator';
 
 export class CreateUpcomingPaymentDto {
-  @IsInt()
-  user_id: number;
-
   @IsDateString()
   payment_date: string;
 

@@ -1,6 +1,4 @@
-// src/financial-goals/financial-goals.service.ts
 import { Injectable, Logger } from '@nestjs/common';
-
 import { CreateFinancialGoalDto } from './dto/create-financial-goal.dto';
 import { UpdateFinancialGoalDto } from './dto/update-financial-goal.dto';
 import { DbPostgresqlService } from 'src/shared/connection/db.postgresql.service';
@@ -11,40 +9,50 @@ export class FinancialGoalsService {
 
   constructor(private readonly dbService: DbPostgresqlService) {}
 
-  // Listar todas las metas financieras de un usuario
-  async findAll(userId: number): Promise<any> {
+  async findAll(userId: string, accessToken?: string): Promise<any> {
     try {
-      return await this.dbService.select('financial_goals', { user_id: userId });
+      return await this.dbService.select('financial_goals', { user_id: userId }, {}, accessToken);
     } catch (error) {
       this.logger.error('Error al obtener metas financieras', error instanceof Error ? error.stack : undefined);
       throw error;
     }
   }
 
-  // Crear una nueva meta financiera
-  async create(createFinancialGoalDto: CreateFinancialGoalDto): Promise<any> {
+  async create(userId: string, createFinancialGoalDto: CreateFinancialGoalDto, accessToken?: string): Promise<any> {
     try {
-      return await this.dbService.insert('financial_goals', createFinancialGoalDto);
+      const payload = {
+        ...createFinancialGoalDto,
+        user_id: userId,
+      };
+      return await this.dbService.insert('financial_goals', payload, accessToken);
     } catch (error) {
       this.logger.error('Error al crear meta financiera', error instanceof Error ? error.stack : undefined);
       throw error;
     }
   }
 
-  // Actualizar una meta financiera (por id)
-  async update(id: number, updateFinancialGoalDto: UpdateFinancialGoalDto): Promise<any> {
+  async update(
+    userId: string,
+    id: number,
+    updateFinancialGoalDto: UpdateFinancialGoalDto,
+    accessToken?: string,
+  ): Promise<any> {
     try {
-      return await this.dbService.update('financial_goals', updateFinancialGoalDto, { id });
+      return await this.dbService.update(
+        'financial_goals',
+        updateFinancialGoalDto,
+        { id, user_id: userId },
+        accessToken
+      );
     } catch (error) {
       this.logger.error('Error al actualizar meta financiera', error instanceof Error ? error.stack : undefined);
       throw error;
     }
   }
 
-  // Eliminar una meta financiera (por id)
-  async delete(id: number): Promise<any> {
+  async delete(userId: string, id: number, accessToken?: string): Promise<any> {
     try {
-      return await this.dbService.delete('financial_goals', { id });
+      return await this.dbService.delete('financial_goals', { id, user_id: userId }, accessToken);
     } catch (error) {
       this.logger.error('Error al eliminar meta financiera', error instanceof Error ? error.stack : undefined);
       throw error;

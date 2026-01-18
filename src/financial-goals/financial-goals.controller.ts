@@ -1,37 +1,42 @@
-// src/financial-goals/financial-goals.controller.ts
-import { Controller, Get, Post, Put, Delete, Body, Param, Query, ParseIntPipe } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, ParseIntPipe, UseGuards } from '@nestjs/common';
 import { FinancialGoalsService } from './financial-goals.service';
 import { CreateFinancialGoalDto } from './dto/create-financial-goal.dto';
 import { UpdateFinancialGoalDto } from './dto/update-financial-goal.dto';
+import { AuthGuard } from '../auth/auth.guard';
+import { CurrentUser, CurrentUserData } from '../auth/current-user.decorator';
 
 @Controller('financial-goals')
+@UseGuards(AuthGuard)
 export class FinancialGoalsController {
   constructor(private readonly financialGoalsService: FinancialGoalsService) {}
 
-  // Listar metas financieras para un usuario (pasando userId por query)
   @Get()
-  async findAll(@Query('userId', ParseIntPipe) userId: number) {
-    return await this.financialGoalsService.findAll(userId);
+  async findAll(@CurrentUser() user: CurrentUserData) {
+    return await this.financialGoalsService.findAll(user.id, user.accessToken);
   }
 
-  // Crear una meta financiera
   @Post()
-  async create(@Body() createFinancialGoalDto: CreateFinancialGoalDto) {
-    return await this.financialGoalsService.create(createFinancialGoalDto);
+  async create(
+    @CurrentUser() user: CurrentUserData,
+    @Body() createFinancialGoalDto: CreateFinancialGoalDto,
+  ) {
+    return await this.financialGoalsService.create(user.id, createFinancialGoalDto, user.accessToken);
   }
 
-  // Actualizar una meta financiera (por id)
   @Put(':id')
   async update(
+    @CurrentUser() user: CurrentUserData,
     @Param('id', ParseIntPipe) id: number,
     @Body() updateFinancialGoalDto: UpdateFinancialGoalDto,
   ) {
-    return await this.financialGoalsService.update(id, updateFinancialGoalDto);
+    return await this.financialGoalsService.update(user.id, id, updateFinancialGoalDto, user.accessToken);
   }
 
-  // Eliminar una meta financiera (por id)
   @Delete(':id')
-  async delete(@Param('id', ParseIntPipe) id: number) {
-    return await this.financialGoalsService.delete(id);
+  async delete(
+    @CurrentUser() user: CurrentUserData,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    return await this.financialGoalsService.delete(user.id, id, user.accessToken);
   }
 }

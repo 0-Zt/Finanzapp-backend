@@ -7,9 +7,13 @@ import { UpcomingPaymentsModule } from './upcoming-payments/upcoming-payments.mo
 import { FinancialGoalsModule } from './financial-goals/financial-goals.module';
 import { DbPostgresqlService } from './shared/connection/db.postgresql.service';
 import { DashboardModule } from './dashboard/dashboard.module';
+import { AuthModule } from './auth/auth.module';
+import { UserProfileModule } from './user-profile/user-profile.module';
 
 @Module({
   imports: [
+    AuthModule,
+    UserProfileModule,
     TransactionsModule,
     ExpenseCategoriesModule,
     UpcomingPaymentsModule,

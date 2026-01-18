@@ -1,10 +1,6 @@
-
-import { IsInt, IsString, IsNotEmpty, IsNumber, IsDateString, IsOptional } from 'class-validator';
+import { IsString, IsNotEmpty, IsNumber, IsDateString, IsOptional } from 'class-validator';
 
 export class CreateFinancialGoalDto {
-  @IsInt()
-  user_id: number;
-
   @IsString()
   @IsNotEmpty()
   title: string;

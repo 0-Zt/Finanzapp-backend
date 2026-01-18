@@ -1,41 +1,46 @@
-// src/transactions/transactions.controller.ts
-import { Controller, Get, Post, Put, Delete, Body, Query, Param, DefaultValuePipe, ParseIntPipe } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Query, Param, DefaultValuePipe, ParseIntPipe, UseGuards } from '@nestjs/common';
 import { TransactionsService } from './transactions.service';
 import { CreateTransactionDto } from './dto/create-transaction.dto';
 import { UpdateTransactionDto } from './dto/update-transaction.dto';
+import { AuthGuard } from '../auth/auth.guard';
+import { CurrentUser, CurrentUserData } from '../auth/current-user.decorator';
 
 @Controller('transactions')
+@UseGuards(AuthGuard)
 export class TransactionsController {
   constructor(private readonly transactionsService: TransactionsService) {}
 
-  // Endpoint para listar transacciones (requiere un parámetro userId en la query)
   @Get()
   async findAll(
-    @Query('userId', ParseIntPipe) userId: number,
+    @CurrentUser() user: CurrentUserData,
     @Query('limit', new DefaultValuePipe(6), ParseIntPipe) limit: number,
     @Query('offset', new DefaultValuePipe(0), ParseIntPipe) offset: number,
   ) {
-    return await this.transactionsService.findAll(userId, limit, offset);
+    return await this.transactionsService.findAll(user.id, limit, offset, user.accessToken);
   }
 
-  // Endpoint para agregar una transacción
   @Post()
-  async create(@Body() createTransactionDto: CreateTransactionDto) {
-    return await this.transactionsService.create(createTransactionDto);
+  async create(
+    @CurrentUser() user: CurrentUserData,
+    @Body() createTransactionDto: CreateTransactionDto,
+  ) {
+    return await this.transactionsService.create(user.id, createTransactionDto, user.accessToken);
   }
 
-  // Endpoint para actualizar una transacción (por id)
   @Put(':id')
   async update(
+    @CurrentUser() user: CurrentUserData,
     @Param('id', ParseIntPipe) id: number,
-    @Body() updateTransactionDto: UpdateTransactionDto
+    @Body() updateTransactionDto: UpdateTransactionDto,
   ) {
-    return await this.transactionsService.update(id, updateTransactionDto);
+    return await this.transactionsService.update(user.id, id, updateTransactionDto, user.accessToken);
   }
 
-  // Endpoint para eliminar una transacción (por id)
   @Delete(':id')
-  async delete(@Param('id', ParseIntPipe) id: number) {
-    return await this.transactionsService.delete(id);
+  async delete(
+    @CurrentUser() user: CurrentUserData,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    return await this.transactionsService.delete(user.id, id, user.accessToken);
   }
 }

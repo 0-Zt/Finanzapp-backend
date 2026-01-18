@@ -1,10 +1,6 @@
-// src/transactions/dto/create-transaction.dto.ts
-import { IsInt, IsDateString, IsNotEmpty, IsNumber, IsString } from 'class-validator';
+import { IsDateString, IsNotEmpty, IsNumber, IsString, IsOptional } from 'class-validator';
 
 export class CreateTransactionDto {
-  @IsInt()
-  user_id: number;
-
   @IsDateString()
   transaction_date: string;
 
@@ -12,7 +8,7 @@ export class CreateTransactionDto {
   @IsNotEmpty()
   description: string;
 
-  @IsInt()
+  @IsNumber()
   category_id: number;
 
   @IsNumber()
@@ -21,4 +17,8 @@ export class CreateTransactionDto {
   @IsString()
   @IsNotEmpty()
   status: string;
+
+  @IsString()
+  @IsOptional()
+  account?: string;
 }

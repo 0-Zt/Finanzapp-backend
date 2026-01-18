@@ -15,7 +15,8 @@ export interface SelectOptions {
 @Injectable()
 export class DbPostgresqlService {
   private readonly logger = new Logger(DbPostgresqlService.name);
-  private readonly supabase: SupabaseClient;
+  private readonly supabaseUrl: string;
+  private readonly supabaseAnonKey: string;
 
   constructor() {
     const SUPABASE_URL = process.env.SUPABASE_URL;
@@ -25,9 +26,26 @@ export class DbPostgresqlService {
       throw new Error('Las variables SUPABASE_URL y SUPABASE_ANON_KEY deben estar definidas.');
     }
 
-    // Inicializa el cliente de Supabase
-    this.supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    this.supabaseUrl = SUPABASE_URL;
+    this.supabaseAnonKey = SUPABASE_ANON_KEY;
     this.logger.log('Cliente Supabase inicializado correctamente');
+  }
+
+  private getClient(accessToken?: string): SupabaseClient {
+    if (!accessToken) {
+      return createClient(this.supabaseUrl, this.supabaseAnonKey, {
+        auth: { persistSession: false, autoRefreshToken: false },
+      });
+    }
+
+    return createClient(this.supabaseUrl, this.supabaseAnonKey, {
+      global: {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      },
+      auth: { persistSession: false, autoRefreshToken: false },
+    });
   }
 
   
@@ -36,10 +54,17 @@ export class DbPostgresqlService {
    * @param table Nombre de la tabla.
    * @param queryOptions Objeto con condiciones (ej. { user_id: 1 }).
    * @param options Opciones adicionales como orderBy, order, limit y offset.
+   * @param accessToken JWT del usuario para respetar RLS.
    */
-  async select(table: string, queryOptions: any = {}, options: SelectOptions = {}): Promise<any> {
+  async select(
+    table: string,
+    queryOptions: any = {},
+    options: SelectOptions = {},
+    accessToken?: string,
+  ): Promise<any> {
     // Inicia la consulta
-    let query = this.supabase
+    const client = this.getClient(accessToken);
+    let query = client
       .from(table)
       .select('*')
       .match(queryOptions);
@@ -73,9 +98,11 @@ export class DbPostgresqlService {
    * Inserta datos en la tabla indicada.
    * @param table Nombre de la tabla.
    * @param payload Objeto o arreglo de objetos a insertar.
+   * @param accessToken JWT del usuario para respetar RLS.
    */
-  async insert(table: string, payload: any): Promise<any> {
-    const { data, error } = await this.supabase
+  async insert(table: string, payload: any, accessToken?: string): Promise<any> {
+    const client = this.getClient(accessToken);
+    const { data, error } = await client
       .from(table)
       .insert(payload);
 
@@ -91,9 +118,11 @@ export class DbPostgresqlService {
    * @param table Nombre de la tabla.
    * @param payload Datos a actualizar.
    * @param queryOptions Condiciones para identificar los registros a actualizar.
+   * @param accessToken JWT del usuario para respetar RLS.
    */
-  async update(table: string, payload: any, queryOptions: any): Promise<any> {
-    const { data, error } = await this.supabase
+  async update(table: string, payload: any, queryOptions: any, accessToken?: string): Promise<any> {
+    const client = this.getClient(accessToken);
+    const { data, error } = await client
       .from(table)
       .update(payload)
       .match(queryOptions);
@@ -109,9 +138,11 @@ export class DbPostgresqlService {
    * Elimina registros de la tabla indicada según la condición.
    * @param table Nombre de la tabla.
    * @param queryOptions Condiciones para identificar los registros a eliminar.
+   * @param accessToken JWT del usuario para respetar RLS.
    */
-  async delete(table: string, queryOptions: any): Promise<any> {
-    const { data, error } = await this.supabase
+  async delete(table: string, queryOptions: any, accessToken?: string): Promise<any> {
+    const client = this.getClient(accessToken);
+    const { data, error } = await client
       .from(table)
       .delete()
       .match(queryOptions);
@@ -129,8 +160,9 @@ export class DbPostgresqlService {
    * @param query Consulta SQL.
    * @param params Parámetros para la consulta.
    */
-  async executeSql(query: string, params?: any): Promise<any> {
-    const { data, error } = await this.supabase.rpc('execute_sql', { query, params });
+  async executeSql(query: string, params?: any, accessToken?: string): Promise<any> {
+    const client = this.getClient(accessToken);
+    const { data, error } = await client.rpc('execute_sql', { query, params });
     if (error) {
       this.logger.error(`Error al ejecutar SQL: ${error.message}`);
       throw new InternalServerErrorException(error.message);

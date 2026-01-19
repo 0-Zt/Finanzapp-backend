@@ -1,4 +1,4 @@
-import { IsString, IsNumber, IsOptional, Min, Max } from 'class-validator';
+import { IsString, IsNumber, IsOptional, Min, Max, IsBoolean } from 'class-validator';
 
 export class UpdateProfileDto {
   @IsString()
@@ -19,4 +19,8 @@ export class UpdateProfileDto {
   @IsString()
   @IsOptional()
   currency?: string;
+
+  @IsBoolean()
+  @IsOptional()
+  onboardingCompleted?: boolean;
 }

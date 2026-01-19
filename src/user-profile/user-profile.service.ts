@@ -14,6 +14,7 @@ export interface UserProfile {
   monthly_salary: number;
   salary_day: number;
   currency: string;
+  onboarding_completed: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -128,6 +129,7 @@ export class UserProfileService {
     if (dto.monthlySalary !== undefined) updateData.monthly_salary = dto.monthlySalary;
     if (dto.salaryDay !== undefined) updateData.salary_day = dto.salaryDay;
     if (dto.currency !== undefined) updateData.currency = dto.currency;
+    if (dto.onboardingCompleted !== undefined) updateData.onboarding_completed = dto.onboardingCompleted;
 
     const { data, error } = await client
       .from('user_profiles')
@@ -160,6 +162,7 @@ export class UserProfileService {
     if (dto.monthlySalary !== undefined) insertData.monthly_salary = dto.monthlySalary;
     if (dto.salaryDay !== undefined) insertData.salary_day = dto.salaryDay;
     if (dto.currency !== undefined) insertData.currency = dto.currency;
+    if (dto.onboardingCompleted !== undefined) insertData.onboarding_completed = dto.onboardingCompleted;
 
     const { data: created, error: insertError } = await client
       .from('user_profiles')

@@ -1,4 +1,4 @@
-import { IsNumber, IsNotEmpty, IsPositive } from 'class-validator';
+import { IsNumber, IsNotEmpty, IsPositive, IsOptional, IsString, Matches, IsBoolean } from 'class-validator';
 
 export class CreateCategoryBudgetDto {
   @IsNumber()
@@ -8,4 +8,13 @@ export class CreateCategoryBudgetDto {
   @IsNumber()
   @IsPositive()
   budget_amount: number;
+
+  @IsOptional()
+  @IsString()
+  @Matches(/^\d{4}-\d{2}$/)
+  budget_month?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  rollover_enabled?: boolean;
 }

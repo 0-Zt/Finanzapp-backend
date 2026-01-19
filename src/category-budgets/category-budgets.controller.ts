@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, ParseIntPipe, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, ParseIntPipe, UseGuards, Query } from '@nestjs/common';
 import { CategoryBudgetsService } from './category-budgets.service';
 import { CreateCategoryBudgetDto } from './dto/create-category-budget.dto';
 import { UpdateCategoryBudgetDto } from './dto/update-category-budget.dto';
@@ -11,13 +11,13 @@ export class CategoryBudgetsController {
   constructor(private readonly categoryBudgetsService: CategoryBudgetsService) {}
 
   @Get()
-  async findAll(@CurrentUser() user: CurrentUserData) {
-    return await this.categoryBudgetsService.findAll(user.id, user.accessToken);
+  async findAll(@CurrentUser() user: CurrentUserData, @Query('month') month?: string) {
+    return await this.categoryBudgetsService.findAll(user.id, user.accessToken, month);
   }
 
   @Get('progress')
-  async getProgress(@CurrentUser() user: CurrentUserData) {
-    return await this.categoryBudgetsService.getProgress(user.id, user.accessToken);
+  async getProgress(@CurrentUser() user: CurrentUserData, @Query('month') month?: string) {
+    return await this.categoryBudgetsService.getProgress(user.id, user.accessToken, month);
   }
 
   @Post()

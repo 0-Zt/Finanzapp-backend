@@ -23,4 +23,20 @@ export class UpdateProfileDto {
   @IsBoolean()
   @IsOptional()
   onboardingCompleted?: boolean;
+
+  @IsString()
+  @IsOptional()
+  timezone?: string;
+
+  @IsNumber()
+  @IsOptional()
+  @Min(0)
+  @Max(100)
+  budgetWarningThreshold?: number;
+
+  @IsNumber()
+  @IsOptional()
+  @Min(0)
+  @Max(100)
+  budgetExceededThreshold?: number;
 }

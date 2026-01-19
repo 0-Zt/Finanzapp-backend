@@ -12,6 +12,14 @@ export interface SelectOptions {
   offset?: number;
 }
 
+export type FilterOperator = 'eq' | 'neq' | 'gt' | 'gte' | 'lt' | 'lte' | 'in';
+
+export interface QueryFilter {
+  column: string;
+  operator: FilterOperator;
+  value: any;
+}
+
 @Injectable()
 export class DbPostgresqlService {
   private readonly logger = new Logger(DbPostgresqlService.name);
@@ -79,6 +87,71 @@ export class DbPostgresqlService {
       // Si además se especifica offset, usamos .range() para establecer ambos
       if (options.offset !== undefined) {
         // .range(from, to) donde to = offset + limit - 1
+        query = query.range(options.offset, options.offset + options.limit - 1);
+      } else {
+        query = query.limit(options.limit);
+      }
+    }
+
+    const { data, error } = await query;
+
+    if (error) {
+      this.logger.error(`Error al seleccionar datos de ${table}: ${error.message}`);
+      throw new InternalServerErrorException(error.message);
+    }
+    return data;
+  }
+
+  /**
+   * Realiza una consulta SELECT con filtros avanzados (gte, lte, in, etc).
+   * @param table Nombre de la tabla.
+   * @param filters Lista de filtros con operador.
+   * @param options Opciones de orden y paginacion.
+   * @param accessToken JWT del usuario para respetar RLS.
+   */
+  async selectWithFilters(
+    table: string,
+    filters: QueryFilter[] = [],
+    options: SelectOptions = {},
+    accessToken?: string,
+  ): Promise<any> {
+    const client = this.getClient(accessToken);
+    let query = client.from(table).select('*');
+
+    for (const filter of filters) {
+      switch (filter.operator) {
+        case 'eq':
+          query = query.eq(filter.column, filter.value);
+          break;
+        case 'neq':
+          query = query.neq(filter.column, filter.value);
+          break;
+        case 'gt':
+          query = query.gt(filter.column, filter.value);
+          break;
+        case 'gte':
+          query = query.gte(filter.column, filter.value);
+          break;
+        case 'lt':
+          query = query.lt(filter.column, filter.value);
+          break;
+        case 'lte':
+          query = query.lte(filter.column, filter.value);
+          break;
+        case 'in':
+          query = query.in(filter.column, filter.value);
+          break;
+        default:
+          break;
+      }
+    }
+
+    if (options.orderBy) {
+      query = query.order(options.orderBy, { ascending: options.order !== 'desc' });
+    }
+
+    if (options.limit !== undefined) {
+      if (options.offset !== undefined) {
         query = query.range(options.offset, options.offset + options.limit - 1);
       } else {
         query = query.limit(options.limit);

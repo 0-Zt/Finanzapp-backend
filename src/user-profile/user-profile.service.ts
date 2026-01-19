@@ -15,6 +15,9 @@ export interface UserProfile {
   salary_day: number;
   currency: string;
   onboarding_completed: boolean;
+  timezone: string | null;
+  budget_warning_threshold: number | null;
+  budget_exceeded_threshold: number | null;
   created_at: string;
   updated_at: string;
 }
@@ -130,6 +133,13 @@ export class UserProfileService {
     if (dto.salaryDay !== undefined) updateData.salary_day = dto.salaryDay;
     if (dto.currency !== undefined) updateData.currency = dto.currency;
     if (dto.onboardingCompleted !== undefined) updateData.onboarding_completed = dto.onboardingCompleted;
+    if (dto.timezone !== undefined) updateData.timezone = dto.timezone;
+    if (dto.budgetWarningThreshold !== undefined) {
+      updateData.budget_warning_threshold = dto.budgetWarningThreshold;
+    }
+    if (dto.budgetExceededThreshold !== undefined) {
+      updateData.budget_exceeded_threshold = dto.budgetExceededThreshold;
+    }
 
     const { data, error } = await client
       .from('user_profiles')
@@ -163,6 +173,13 @@ export class UserProfileService {
     if (dto.salaryDay !== undefined) insertData.salary_day = dto.salaryDay;
     if (dto.currency !== undefined) insertData.currency = dto.currency;
     if (dto.onboardingCompleted !== undefined) insertData.onboarding_completed = dto.onboardingCompleted;
+    if (dto.timezone !== undefined) insertData.timezone = dto.timezone;
+    if (dto.budgetWarningThreshold !== undefined) {
+      insertData.budget_warning_threshold = dto.budgetWarningThreshold;
+    }
+    if (dto.budgetExceededThreshold !== undefined) {
+      insertData.budget_exceeded_threshold = dto.budgetExceededThreshold;
+    }
 
     const { data: created, error: insertError } = await client
       .from('user_profiles')

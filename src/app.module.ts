@@ -11,6 +11,7 @@ import { DbPostgresqlService } from './shared/connection/db.postgresql.service';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { AuthModule } from './auth/auth.module';
 import { UserProfileModule } from './user-profile/user-profile.module';
+import { CreditCardsModule } from './credit-cards/credit-cards.module';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { UserProfileModule } from './user-profile/user-profile.module';
     CategoryBudgetsModule,
     CategoriesModule,
     DashboardModule,
+    CreditCardsModule,
   ],
   controllers: [AppController],
   providers: [AppService, DbPostgresqlService],

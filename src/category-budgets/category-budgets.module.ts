@@ -8,5 +8,6 @@ import { AuthModule } from '../auth/auth.module';
   imports: [AuthModule],
   providers: [CategoryBudgetsService, DbPostgresqlService],
   controllers: [CategoryBudgetsController],
+  exports: [CategoryBudgetsService],
 })
 export class CategoryBudgetsModule {}

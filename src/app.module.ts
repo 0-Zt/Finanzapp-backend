@@ -12,6 +12,7 @@ import { DashboardModule } from './dashboard/dashboard.module';
 import { AuthModule } from './auth/auth.module';
 import { UserProfileModule } from './user-profile/user-profile.module';
 import { CreditCardsModule } from './credit-cards/credit-cards.module';
+import { NotificationsModule } from './notifications/notifications.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { CreditCardsModule } from './credit-cards/credit-cards.module';
     CategoriesModule,
     DashboardModule,
     CreditCardsModule,
+    NotificationsModule,
   ],
   controllers: [AppController],
   providers: [AppService, DbPostgresqlService],

@@ -7,6 +7,19 @@ import { UpdateFixedExpenseDto } from './dto/update-fixed-expense.dto';
 
 dotenv.config();
 
+export interface NotificationPreferences {
+  budget_warning?: boolean;
+  budget_exceeded?: boolean;
+  payment_reminder?: boolean;
+  payment_reminder_days?: number;
+  goal_deadline?: boolean;
+  goal_deadline_days?: number;
+  card_payment_due?: boolean;
+  card_payment_due_days?: number;
+  fixed_expense_due?: boolean;
+  fixed_expense_due_days?: number;
+}
+
 export interface UserProfile {
   id: string;
   email: string;
@@ -18,6 +31,7 @@ export interface UserProfile {
   timezone: string | null;
   budget_warning_threshold: number | null;
   budget_exceeded_threshold: number | null;
+  notification_preferences: NotificationPreferences | null;
   created_at: string;
   updated_at: string;
 }
@@ -140,6 +154,9 @@ export class UserProfileService {
     if (dto.budgetExceededThreshold !== undefined) {
       updateData.budget_exceeded_threshold = dto.budgetExceededThreshold;
     }
+    if (dto.notificationPreferences !== undefined) {
+      updateData.notification_preferences = dto.notificationPreferences;
+    }
 
     const { data, error } = await client
       .from('user_profiles')
@@ -179,6 +196,9 @@ export class UserProfileService {
     }
     if (dto.budgetExceededThreshold !== undefined) {
       insertData.budget_exceeded_threshold = dto.budgetExceededThreshold;
+    }
+    if (dto.notificationPreferences !== undefined) {
+      insertData.notification_preferences = dto.notificationPreferences;
     }
 
     const { data: created, error: insertError } = await client

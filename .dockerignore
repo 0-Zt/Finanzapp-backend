@@ -1,0 +1,42 @@
+# Dependencias - se instalan dentro del contenedor
+node_modules
+
+# Carpeta de build - se genera dentro del contenedor
+dist
+
+# Archivos de entorno con secretos
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+npm-debug.log*
+
+# Tests
+coverage
+test
+*.spec.ts
+
+# Git
+.git
+.gitignore
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# Sistema
+.DS_Store
+Thumbs.db
+
+# Docker (evita recursión)
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# Documentación
+README.md
+*.md

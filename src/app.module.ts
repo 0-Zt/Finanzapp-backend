@@ -13,6 +13,7 @@ import { AuthModule } from './auth/auth.module';
 import { UserProfileModule } from './user-profile/user-profile.module';
 import { CreditCardsModule } from './credit-cards/credit-cards.module';
 import { NotificationsModule } from './notifications/notifications.module';
+import { MonthlyAutomationModule } from './monthly-automation/monthly-automation.module';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { NotificationsModule } from './notifications/notifications.module';
     DashboardModule,
     CreditCardsModule,
     NotificationsModule,
+    MonthlyAutomationModule,
   ],
   controllers: [AppController],
   providers: [AppService, DbPostgresqlService],

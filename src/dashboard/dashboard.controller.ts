@@ -22,4 +22,16 @@ export class DashboardController {
   ) {
     return await this.dashboardService.getDashboard(user.id, limit, user.accessToken);
   }
+
+  @Get('monthly-summary')
+  @ApiOperation({ summary: 'Resumen financiero mensual (ingresos, gastos, ahorro, comparación)' })
+  @ApiQuery({ name: 'month', required: false, description: 'Mes en formato YYYY-MM (default: mes actual)', example: '2026-01' })
+  @ApiResponse({ status: 200, description: 'Resumen mensual con comparación vs mes anterior.' })
+  @ApiResponse({ status: 401, description: 'No autorizado.' })
+  async getMonthlySummary(
+    @CurrentUser() user: CurrentUserData,
+    @Query('month') month?: string,
+  ) {
+    return await this.dashboardService.getMonthlySummary(user.id, month, user.accessToken);
+  }
 }

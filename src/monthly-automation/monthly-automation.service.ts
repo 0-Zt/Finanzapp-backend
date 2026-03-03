@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import * as dotenv from 'dotenv';
 import { UserProfileService, FixedExpense } from '../user-profile/user-profile.service';
+import { DEFAULT_CHILE_TIMEZONE } from '../shared/constants/chile-defaults';
 
 dotenv.config();
 
@@ -317,9 +318,9 @@ export class MonthlyAutomationService {
   private async getUserTimezone(userId: string, accessToken?: string): Promise<string> {
     try {
       const profile = await this.userProfileService.getProfile(userId, undefined, undefined, accessToken);
-      return profile.timezone || 'UTC';
+      return profile.timezone || DEFAULT_CHILE_TIMEZONE;
     } catch {
-      return 'UTC';
+      return DEFAULT_CHILE_TIMEZONE;
     }
   }
 

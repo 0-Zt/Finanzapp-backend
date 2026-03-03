@@ -52,7 +52,25 @@ export class CreditCardsService {
         ...createCardDto,
         user_id: userId,
       };
-      return await this.dbService.insert('credit_cards', payload, accessToken);
+      await this.dbService.insert('credit_cards', payload, accessToken);
+
+      // Obtener la tarjeta recién creada para tener su ID
+      const cards = await this.dbService.select(
+        'credit_cards',
+        { user_id: userId },
+        { orderBy: 'created_at', order: 'desc', limit: 1 },
+        accessToken,
+      );
+      const newCard = cards?.[0];
+
+      // Crear categoría de gasto vinculada automáticamente
+      if (newCard) {
+        const categoryName = this.buildCategoryName(createCardDto.name, createCardDto.last_four_digits);
+        await this.createLinkedCategory(newCard.id, categoryName, createCardDto.color, accessToken);
+        this.logger.log(`Categoría vinculada creada para tarjeta ${newCard.id}`);
+      }
+
+      return newCard;
     } catch (error) {
       this.logger.error('Error al crear tarjeta de crédito', error instanceof Error ? error.stack : undefined);
       throw error;
@@ -66,12 +84,31 @@ export class CreditCardsService {
     accessToken?: string
   ): Promise<any> {
     try {
-      return await this.dbService.update(
+      const result = await this.dbService.update(
         'credit_cards',
         updateCardDto,
         { id: cardId, user_id: userId },
         accessToken
       );
+
+      // Si se actualizó nombre, últimos 4 dígitos o color, sincronizar la categoría vinculada
+      if (updateCardDto.name || updateCardDto.last_four_digits || updateCardDto.color) {
+        const card = await this.findCardById(userId, cardId, accessToken);
+        const categoryName = this.buildCategoryName(card.name, card.last_four_digits);
+        const categoryUpdate: any = { name: categoryName };
+        if (updateCardDto.color) {
+          categoryUpdate.icon_color = updateCardDto.color;
+        }
+        await this.dbService.update(
+          'expense_categories',
+          categoryUpdate,
+          { credit_card_id: cardId },
+          accessToken,
+        );
+        this.logger.log(`Categoría vinculada actualizada para tarjeta ${cardId}`);
+      }
+
+      return result;
     } catch (error) {
       this.logger.error('Error al actualizar tarjeta de crédito', error instanceof Error ? error.stack : undefined);
       throw error;
@@ -80,6 +117,8 @@ export class CreditCardsService {
 
   async deleteCard(userId: string, cardId: number, accessToken?: string): Promise<any> {
     try {
+      // La categoría vinculada se elimina automáticamente por CASCADE en la FK credit_card_id
+      this.logger.log(`Eliminando tarjeta ${cardId} (la categoría vinculada se elimina por CASCADE)`);
       return await this.dbService.delete('credit_cards', { id: cardId, user_id: userId }, accessToken);
     } catch (error) {
       this.logger.error('Error al eliminar tarjeta de crédito', error instanceof Error ? error.stack : undefined);
@@ -286,5 +325,61 @@ export class CreditCardsService {
       this.logger.error('Error al obtener resumen de todas las tarjetas', error instanceof Error ? error.stack : undefined);
       throw error;
     }
+  }
+
+  // ==================== LINKED CATEGORIES ====================
+
+  /**
+   * Busca la categoría vinculada a una tarjeta de crédito.
+   */
+  async findLinkedCategory(creditCardId: number, accessToken?: string): Promise<any> {
+    try {
+      const results = await this.dbService.select(
+        'expense_categories',
+        { credit_card_id: creditCardId },
+        {},
+        accessToken,
+      );
+      return results?.[0] || null;
+    } catch (error) {
+      this.logger.error('Error al buscar categoría vinculada', error instanceof Error ? error.stack : undefined);
+      return null;
+    }
+  }
+
+  /**
+   * Crea una categoría de gasto vinculada a una tarjeta de crédito.
+   */
+  private async createLinkedCategory(
+    creditCardId: number,
+    name: string,
+    color?: string,
+    accessToken?: string,
+  ): Promise<void> {
+    try {
+      await this.dbService.insert(
+        'expense_categories',
+        {
+          name,
+          icon: 'credit_card',
+          icon_color: color || '#6366f1',
+          is_default: false,
+          credit_card_id: creditCardId,
+        },
+        accessToken,
+      );
+    } catch (error) {
+      this.logger.error('Error al crear categoría vinculada', error instanceof Error ? error.stack : undefined);
+      // No lanzar: la tarjeta ya se creó, la categoría es secundaria
+    }
+  }
+
+  /**
+   * Genera el nombre de la categoría a partir del nombre de la tarjeta.
+   * Ej: "Visa Platinum" + "1234" → "TC Visa Platinum ****1234"
+   */
+  private buildCategoryName(cardName: string, lastFourDigits?: string): string {
+    const suffix = lastFourDigits ? ` ****${lastFourDigits}` : '';
+    return `TC ${cardName}${suffix}`;
   }
 }

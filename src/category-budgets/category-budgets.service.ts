@@ -2,6 +2,7 @@ import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 import { CreateCategoryBudgetDto } from './dto/create-category-budget.dto';
 import { UpdateCategoryBudgetDto } from './dto/update-category-budget.dto';
 import { DbPostgresqlService, QueryFilter } from 'src/shared/connection/db.postgresql.service';
+import { DEFAULT_CHILE_TIMEZONE } from '../shared/constants/chile-defaults';
 
 export interface BudgetProgress {
   id: number;
@@ -559,12 +560,12 @@ export class CategoryBudgetsService {
   }
 
   private normalizeTimeZone(timeZone?: string | null): string {
-    if (!timeZone) return 'UTC';
+    if (!timeZone) return DEFAULT_CHILE_TIMEZONE;
     try {
       new Intl.DateTimeFormat('en-US', { timeZone });
       return timeZone;
     } catch {
-      return 'UTC';
+      return DEFAULT_CHILE_TIMEZONE;
     }
   }
 

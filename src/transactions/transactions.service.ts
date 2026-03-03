@@ -26,11 +26,66 @@ export class TransactionsService {
 
   async create(userId: string, createTransactionDto: CreateTransactionDto, accessToken?: string): Promise<any> {
     try {
-      const payload = {
-        ...createTransactionDto,
+      // Verificar si la categoría está vinculada a una tarjeta de crédito
+      const linkedCard = await this.findLinkedCreditCard(createTransactionDto.category_id, accessToken);
+
+      const payload: any = {
+        transaction_date: createTransactionDto.transaction_date,
+        description: createTransactionDto.description,
+        category_id: createTransactionDto.category_id,
+        amount: createTransactionDto.amount,
+        status: createTransactionDto.status,
+        account: createTransactionDto.account,
         user_id: userId,
       };
-      return await this.dbService.insert('transactions', payload, accessToken);
+
+      if (linkedCard) {
+        // Es una transacción de tarjeta de crédito → registro dual
+        const installments = createTransactionDto.installments || 1;
+        payload.installments = installments;
+
+        // 1. Crear la transacción en credit_card_transactions
+        const cardAmount = Math.abs(createTransactionDto.amount);
+        const cardTransactionPayload: any = {
+          user_id: userId,
+          credit_card_id: linkedCard.id,
+          transaction_date: createTransactionDto.transaction_date,
+          description: createTransactionDto.description,
+          amount: cardAmount, // Positivo = cargo a la tarjeta
+          category_id: createTransactionDto.category_id,
+          status: 'pending',
+          installments,
+          current_installment: 1,
+        };
+
+        if (installments > 1) {
+          cardTransactionPayload.installment_amount = cardAmount / installments;
+        }
+
+        await this.dbService.insert('credit_card_transactions', cardTransactionPayload, accessToken);
+
+        // 2. Obtener el ID de la transacción de tarjeta recién creada
+        const cardTransactions = await this.dbService.select(
+          'credit_card_transactions',
+          { user_id: userId, credit_card_id: linkedCard.id },
+          { orderBy: 'created_at', order: 'desc', limit: 1 },
+          accessToken,
+        );
+        const cardTx = cardTransactions?.[0];
+
+        if (cardTx) {
+          payload.credit_card_transaction_id = cardTx.id;
+        }
+
+        this.logger.log(
+          `Registro dual: transacción vinculada a tarjeta ${linkedCard.id} (${installments} cuota${installments > 1 ? 's' : ''})`,
+        );
+      }
+
+      // 2. Crear la transacción regular
+      await this.dbService.insert('transactions', payload, accessToken);
+
+      return { linked_card: linkedCard ? { id: linkedCard.id, name: linkedCard.name } : null };
     } catch (error) {
       this.logger.error('Error al crear transaccion', error instanceof Error ? error.stack : undefined);
       throw error;
@@ -44,6 +99,34 @@ export class TransactionsService {
     accessToken?: string,
   ): Promise<any> {
     try {
+      // Si la transacción tiene un credit_card_transaction_id, sincronizar
+      const existing = await this.dbService.select(
+        'transactions',
+        { id, user_id: userId },
+        {},
+        accessToken,
+      );
+      const tx = existing?.[0];
+
+      if (tx?.credit_card_transaction_id) {
+        // Sincronizar cambios con la transacción de tarjeta
+        const cardUpdate: any = {};
+        if (updateTransactionDto.description !== undefined) cardUpdate.description = updateTransactionDto.description;
+        if (updateTransactionDto.amount !== undefined) cardUpdate.amount = Math.abs(updateTransactionDto.amount);
+        if (updateTransactionDto.transaction_date !== undefined) cardUpdate.transaction_date = updateTransactionDto.transaction_date;
+        if (updateTransactionDto.category_id !== undefined) cardUpdate.category_id = updateTransactionDto.category_id;
+
+        if (Object.keys(cardUpdate).length > 0) {
+          await this.dbService.update(
+            'credit_card_transactions',
+            cardUpdate,
+            { id: tx.credit_card_transaction_id, user_id: userId },
+            accessToken,
+          );
+          this.logger.log(`Sincronizada transacción de tarjeta ${tx.credit_card_transaction_id}`);
+        }
+      }
+
       return await this.dbService.update('transactions', updateTransactionDto, { id, user_id: userId }, accessToken);
     } catch (error) {
       this.logger.error('Error al actualizar transaccion', error instanceof Error ? error.stack : undefined);
@@ -53,10 +136,59 @@ export class TransactionsService {
 
   async delete(userId: string, id: number, accessToken?: string): Promise<any> {
     try {
+      // Si la transacción tiene un credit_card_transaction_id, eliminar también la de tarjeta
+      const existing = await this.dbService.select(
+        'transactions',
+        { id, user_id: userId },
+        {},
+        accessToken,
+      );
+      const tx = existing?.[0];
+
+      if (tx?.credit_card_transaction_id) {
+        await this.dbService.delete(
+          'credit_card_transactions',
+          { id: tx.credit_card_transaction_id, user_id: userId },
+          accessToken,
+        );
+        this.logger.log(`Eliminada transacción de tarjeta vinculada ${tx.credit_card_transaction_id}`);
+      }
+
       return await this.dbService.delete('transactions', { id, user_id: userId }, accessToken);
     } catch (error) {
       this.logger.error('Error al eliminar transaccion', error instanceof Error ? error.stack : undefined);
       throw error;
+    }
+  }
+
+  /**
+   * Busca si una categoría está vinculada a una tarjeta de crédito.
+   * Retorna la tarjeta si existe, null si no.
+   */
+  private async findLinkedCreditCard(categoryId: number, accessToken?: string): Promise<any> {
+    try {
+      const categories = await this.dbService.select(
+        'expense_categories',
+        { id: categoryId },
+        {},
+        accessToken,
+      );
+      const category = categories?.[0];
+
+      if (!category?.credit_card_id) {
+        return null;
+      }
+
+      const cards = await this.dbService.select(
+        'credit_cards',
+        { id: category.credit_card_id },
+        {},
+        accessToken,
+      );
+      return cards?.[0] || null;
+    } catch (error) {
+      this.logger.error('Error al buscar tarjeta vinculada a categoría', error instanceof Error ? error.stack : undefined);
+      return null;
     }
   }
 

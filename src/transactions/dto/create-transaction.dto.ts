@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsDateString, IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
+import { IsDateString, IsInt, IsNotEmpty, IsNumber, IsOptional, IsString, Min } from 'class-validator';
 
 export class CreateTransactionDto {
   @ApiProperty({ example: '2026-01-15' })
@@ -28,4 +28,10 @@ export class CreateTransactionDto {
   @IsString()
   @IsOptional()
   account?: string;
+
+  @ApiPropertyOptional({ example: 3, description: 'Cantidad de cuotas (solo para categorías de tarjeta de crédito)', minimum: 1 })
+  @IsInt()
+  @IsOptional()
+  @Min(1)
+  installments?: number;
 }

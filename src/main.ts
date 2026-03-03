@@ -1,4 +1,3 @@
-// main.ts
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
@@ -14,12 +13,24 @@ async function bootstrap() {
     }),
   );
 
-  app.enableCors(); // TODO: restringir origins en producción
+  const corsOrigin = process.env.CORS_ORIGIN;
+  if (!corsOrigin) {
+    app.enableCors({ origin: true, credentials: true });
+  } else {
+    const configuredOrigins = corsOrigin
+      .split(',')
+      .map((origin) => origin.trim())
+      .filter((origin) => origin.length > 0);
 
-  // Swagger / OpenAPI docs
+    app.enableCors({
+      origin: configuredOrigins.includes('*') ? true : configuredOrigins,
+      credentials: true,
+    });
+  }
+
   const swaggerConfig = new DocumentBuilder()
     .setTitle('Finanzapp API')
-    .setDescription('Documentación interactiva de la API (Swagger/OpenAPI).')
+    .setDescription('Documentacion interactiva de la API (Swagger/OpenAPI).')
     .setVersion('1.0')
     .addBearerAuth()
     .build();
